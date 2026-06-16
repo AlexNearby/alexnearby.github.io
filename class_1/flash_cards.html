@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- viewport-fit=cover сообщает браузеру использовать абсолютно весь экран смартфона -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>TTS Flashcards</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            /* Использование svh вместо vh решает проблему скрытия под нижней панелью браузера */
+            height: 100svh; 
+            background-color: #f8f9fa;
+            margin: 0;
+            /* Динамические отступы снизу и сверху для обхода системных полос навигации */
+            padding: calc(10px + env(safe-area-inset-top)) 15px calc(15px + env(safe-area-inset-bottom)) 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Стартовый экран */
+        .welcome-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+            text-align: center;
+        }
+        .welcome-screen h1 {
+            color: #212529;
+            font-size: 28px;
+            margin-bottom: 25px;
+        }
+        .start-btn {
+            width: 80%;
+            max-width: 280px;
+            padding: 16px 20px;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+            margin-top: 20px;
+        }
+
+        /* Контейнер карточки (немного уменьшена высота для 100% вместимости органов управления) */
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 400px;
+            height: 48vh; /* Снижено с 55vh, чтобы гарантировать отсутствие срезов */
+            max-height: 320px;
+            min-height: 240px;
+            cursor: pointer;
+            margin: auto 0;
+        }
+        
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border-radius: 16px;
+        }
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background-color: white;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .card-front {
+            color: #212529;
+        }
+        .card-back {
+            background-color: #007bff;
+            color: white;
+            transform: rotateY(180deg);
+        }
+        
+        /* Стили текста на карточке */
+        .card-front .main-text {
+            font-size: 40px; /* Чуть уменьшено с 44px для защиты от переносов длинных слов */
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+            word-break: break-word;
+        }
+        .transcription {
+            font-size: 22px;
+            color: #5a6268;
+            font-family: "Courier New", Courier, monospace;
+            font-weight: bold;
+        }
+        .card-back .main-text {
+            font-size: 30px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .explanation {
+            font-size: 15px;
+            color: rgba(255,255,255,0.9);
+            margin-top: 10px;
+            line-height: 1.4;
+            font-weight: 400;
+        }
+
+        /* Панель управления внизу экрана */
+        .controls-container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Снижен шаг */
+            margin-top: auto;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        /* Кнопки */
+        button {
+            flex: 1;
+            height: 48px; /* Оптимальная высота, не уходящая за пределы */
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            background-color: #e9ecef;
+            color: #495057;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:active { background-color: #dee2e6; }
+        
+        .audio-btn {
+            flex: 1.2; 
+            background-color: #17a2b8;
+            color: white;
+        }
+        .audio-btn:active { background-color: #138496; }
+        
+        /* Переключатель */
+        .autoplay-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #495057;
+            cursor: pointer;
+            user-select: none;
+            background: white;
+            height: 46px;
+            width: 100%;
+            max-width: 280px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .controls-container .autoplay-label {
+            max-width: 100%;
+        }
+        .autoplay-label input {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Стартовый экран (Переключатель теперь здесь тоже есть) -->
+    <div class="welcome-screen" id="welcome-screen">
+        <h1>English Flashcards</h1>
+        
+        <label class="autoplay-label">
+            <input type="checkbox" id="welcome-autoplay-toggle" checked onchange="syncToggles(this)">
+            Auto-Speak words
+        </label>
+        
+        <button class="start-btn" onclick="startLearning()">Start Learning</button>
+    </div>
+
+    <!-- Блок карточки -->
+    <div class="card-container" onclick="flipCard()">
+        <div class="card" id="card">
+            <div class="card-face card-front">
+                <div class="main-text" id="front-text">...</div>
+                <div class="transcription" id="transcription-text">...</div>
+            </div>
+            <div class="card-face card-back">
+                <div class="main-text" id="back-text">...</div>
+                <div class="explanation" id="explanation-text">...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Мобильная панель управления -->
+    <div class="controls-container">
+        <!-- Переключатель в основном интерфейсе приложения -->
+        <label class="autoplay-label">
+            <input type="checkbox" id="autoplay-toggle" checked onchange="syncToggles(this)">
+            Auto-Speak words
+        </label>
+
+        <div class="controls">
+            <button onclick="prevCard(event)">◀ Prev</button>
+            <button class="audio-btn" onclick="speakText(event)">🔊 Speak</button>
+            <button onclick="nextCard(event)">Next ▶</button>
+        </div>
+    </div>
+
+    <script>
+        const deck = [
+          // === ЦВЕТА (COLORS) ===
+            { front: "red", transcription: "/red/", back: "красный", explanation: "Цвет крови или помидора." },
+            { front: "blue", transcription: "/bluː/", back: "синий", explanation: "Цвет ясного неба или океана." },
+            { front: "green", transcription: "/ɡriːn/", back: "зелёный", explanation: "Цвет травы или листьев." },
+            { front: "yellow", transcription: "/ˈjeloʊ/", back: "жёлтый", explanation: "Цвет солнца или лимона." },
+            { front: "white", transcription: "/waɪt/", back: "белый", explanation: "Цвет снега или молока." },
+            { front: "black", transcription: "/blæk/", back: "чёрный", explanation: "Цвет ночи или угля." },
+            { front: "orange", transcription: "/ˈɔːrɪndʒ/", back: "оранжевый", explanation: "Цвет апельсина или моркови." },
+            { front: "pink", transcription: "/pɪŋk/", back: "розовый", explanation: "Светлый и нежный цвет, как у цветов." },
+            { front: "brown", transcription: "/braʊn/", back: "коричневый", explanation: "Цвет земли или шоколада." },
+            { front: "purple", transcription: "/ˈpɜːrpəl/", back: "фиолетовый", explanation: "Цвет винограда или сирени." },
+            { front: "grey", transcription: "/ɡreɪ/", back: "серый", explanation: "Цвет дождливого облака или мыши." },
+
+            // === СЕМЬЯ И ЛЮДИ ===
+            { front: "mother", transcription: "/ˈmʌðɚ/", back: "мама", explanation: "" },
+            { front: "father", transcription: "/ˈfɑːðɚ/", back: "папа", explanation: "" },
+            { front: "sister", transcription: "/ˈsɪstɚ/", back: "сестра", explanation: "" },
+            { front: "brother", transcription: "/ˈbrʌðɚ/", back: "брат", explanation: "" },
+            { front: "friend", transcription: "/frend/", back: "друг", explanation: "" },
+            { front: "child", transcription: "/tʃaɪld/", back: "ребёнок", explanation: "" },
+
+            // === ЕДА И НАПИТКИ ===
+            { front: "bread", transcription: "/bred/", back: "хлеб", explanation: "Еда, которую пекут из муки и воды." },
+            { front: "milk", transcription: "/mɪlk/", back: "молоко", explanation: "Белый напиток, который дают коровы." },
+            { front: "egg", transcription: "/eɡ/", back: "яйцо", explanation: "Еда овальной формы, которую несут курицы." },
+            { front: "apple", transcription: "/ˈæpəl/", back: "яблоко", explanation: "Круглый фрукт красного, зелёного или жёлтого цвета." },
+            { front: "water", transcription: "/ˈwɔːtɚ/", back: "вода", explanation: "Прозрачная жидкость, которую мы пьём." },
+            { front: "rice", transcription: "/raɪs/", back: "рис", explanation: "Маленькие белые зёрна, которые варят и едят." },
+
+            // === ДОМ И КОМНАТЫ ===
+            { front: "house", transcription: "/haʊs/", back: "дом", explanation: "Здание, в котором живут люди." },
+            { front: "room", transcription: "/ruːm/", back: "комната", explanation: "Часть дома со стенами и дверью." },
+            { front: "door", transcription: "/dɔːr/", back: "дверь", explanation: "Деревянная или металлическая штука, которую открывают, чтобы войти." },
+            { front: "window", transcription: "/ˈwɪndoʊ/", back: "окно", explanation: "Отверстие в стене со стеклом, чтобы смотреть наружу." },
+            { front: "table", transcription: "/ˈteɪbəl/", back: "стол", explanation: "Предмет мебели с ножками и плоской поверхностью." },
+            { front: "chair", transcription: "/tʃeər/", back: "стул", explanation: "Предмет мебели, на котором сидят." },
+            { front: "bed", transcription: "/bed/", back: "кровать", explanation: "Место, где спят." },
+
+            // === ОДЕЖДА ===
+            { front: "hat", transcription: "/hæt/", back: "шляпа", explanation: "Вещь, которую носят на голове." },
+            { front: "shirt", transcription: "/ʃɜːrt/", back: "рубашка", explanation: "Одежда, которую надевают на верхнюю часть тела." },
+            { front: "shoe", transcription: "/ʃuː/", back: "обувь", explanation: "Вещь, которую надевают на ноги." },
+
+            // === ПРИРОДА И ПОГОДА ===
+            { front: "sun", transcription: "/sʌn/", back: "солнце", explanation: "Яркий жёлтый круг на небе днём." },
+            { front: "rain", transcription: "/reɪn/", back: "дождь", explanation: "Вода, которая падает с неба." },
+            { front: "snow", transcription: "/snoʊ/", back: "снег", explanation: "Белые холодные хлопья, которые падают зимой." },
+            { front: "tree", transcription: "/triː/", back: "дерево", explanation: "Высокое растение со стволом и ветками." },
+            { front: "flower", transcription: "/ˈflaʊɚ/", back: "цветок", explanation: "Красивая разноцветная часть растения." },
+            { front: "sky", transcription: "/skaɪ/", back: "небо", explanation: "Всё, что над головой — голубое или серое." },
+
+            // === ЖИВОТНЫЕ ===
+            { front: "cat", transcription: "/kæt/", back: "кошка", explanation: "Маленькое домашнее животное, которое мяукает." },
+            { front: "dog", transcription: "/dɔːɡ/", back: "собака", explanation: "Домашнее животное, которое лает и виляет хвостом." },
+            { front: "bird", transcription: "/bɜːrd/", back: "птица", explanation: "Животное с крыльями и клювом, которое умеет летать." },
+            { front: "fish", transcription: "/fɪʃ/", back: "рыба", explanation: "Животное, которое живёт в воде и плавает." },
+            { front: "horse", transcription: "/hɔːrs/", back: "лошадь", explanation: "Большое сильное животное, на котором можно ездить." },
+
+            // === ЕЖЕДНЕВНЫЕ ГЛАГОЛЫ ===
+            { front: "eat", transcription: "/iːt/", back: "есть", explanation: "Брать еду и жевать её." },
+            { front: "drink", transcription: "/drɪŋk/", back: "пить", explanation: "Глотать жидкость." },
+            { front: "sleep", transcription: "/sliːp/", back: "спать", explanation: "Закрывать глаза и отдыхать ночью." },
+            { front: "walk", transcription: "/wɔːk/", back: "идти пешком", explanation: "Передвигаться на ногах не спеша." },
+            { front: "run", transcription: "/rʌn/", back: "бегать", explanation: "Передвигаться на ногах быстро." },
+            { front: "read", transcription: "/riːd/", back: "читать", explanation: "Смотреть на буквы и понимать слова." },
+            { front: "write", transcription: "/raɪt/", back: "писать", explanation: "Рисовать буквы и слова на бумаге." },
+            { front: "speak", transcription: "/spiːk/", back: "говорить", explanation: "Произносить слова языком." },
+            { front: "see", transcription: "/siː/", back: "видеть", explanation: "Замечать что-то глазами." },
+            { front: "hear", transcription: "/hɪər/", back: "слышать", explanation: "Воспринимать звуки ушами." },
+
+            // === БАЗОВЫЕ ПРИЛАГАТЕЛЬНЫЕ ===
+            { front: "big", transcription: "/bɪɡ/", back: "большой", explanation: "Большого размера, не маленький." },
+            { front: "small", transcription: "/smɔːl/", back: "маленький", explanation: "Небольшого размера." },
+            { front: "good", transcription: "/ɡʊd/", back: "хороший", explanation: "То, что нравится, качественное." },
+            { front: "bad", transcription: "/bæd/", back: "плохой", explanation: "То, что не нравится, некачественное." },
+            { front: "cold", transcription: "/koʊld/", back: "холодный", explanation: "С низкой температурой." },
+            { front: "hot", transcription: "/hɑːt/", back: "горячий", explanation: "С высокой температурой." },
+            { front: "happy", transcription: "/ˈhæpi/", back: "счастливый", explanation: "С хорошим настроением, радостный." },
+            { front: "sad", transcription: "/sæd/", back: "грустный", explanation: "В плохом настроении, печальный." },
+
+            // === БАЗОВЫЕ СУЩЕСТВИТЕЛЬНЫЕ ===
+            { front: "name", transcription: "/neɪm/", back: "имя", explanation: "Слово, которым называют человека." },
+            { front: "city", transcription: "/ˈsɪti/", back: "город", explanation: "Большое место, где живёт много людей." },
+            { front: "street", transcription: "/striːt/", back: "улица", explanation: "Дорога между домами в городе." },
+            { front: "car", transcription: "/kɑːr/", back: "машина", explanation: "Транспортное средство с колёсами и мотором." },
+            { front: "book", transcription: "/bʊk/", back: "книга", explanation: "Предмет с бумажными страницами, который читают." },
+            { front: "pen", transcription: "/pen/", back: "ручка", explanation: "Предмет, которым пишут чернилами." },
+            { front: "school", transcription: "/skuːl/", back: "школа", explanation: "Место, где учатся дети." },
+        ];
+
+        let currentIndex = 0;
+        const cardElement = document.getElementById('card');
+        const frontText = document.getElementById('front-text');
+        const transcriptionText = document.getElementById('transcription-text');
+        const backText = document.getElementById('back-text');
+        const explanationText = document.getElementById('explanation-text');
+        const autoplayToggle = document.getElementById('autoplay-toggle');
+        const welcomeScreen = document.getElementById('welcome-screen');
+
+        function startLearning() {
+            welcomeScreen.style.opacity = '0';
+            setTimeout(() => {
+                welcomeScreen.style.display = 'none';
+            }, 300);
+
+            if (autoplayToggle.checked) {
+                autoSpeakFront(deck[currentIndex].front);
+            }
+        }
+
+        function updateCard() {
+            cardElement.classList.remove('flipped');
+            setTimeout(() => {
+                frontText.textContent = deck[currentIndex].front;
+                transcriptionText.textContent = deck[currentIndex].transcription;
+                backText.textContent = deck[currentIndex].back;
+                explanationText.textContent = deck[currentIndex].explanation;
+
+                if (autoplayToggle.checked && welcomeScreen.style.display === 'none') {
+                    autoSpeakFront(deck[currentIndex].front);
+                }
+            }, 150);
+        }
+
+        function flipCard() {
+            cardElement.classList.toggle('flipped');
+        }
+
+        function nextCard(event) {
+            event.stopPropagation(); // Останавливает переворот карточки при клике на кнопки
+            currentIndex = (currentIndex + 1) % deck.length;
+            updateCard();
+        }
+
+        function prevCard(event) {
+            event.stopPropagation();
+            currentIndex = (currentIndex - 1 + deck.length) % deck.length;
+            updateCard();
+        }
+
+        // Функция для принудительного воспроизведения по кнопке "Speak"
+        function speakText(event) {
+            event.stopPropagation();
+            const isFlipped = cardElement.classList.contains('flipped');
+            
+            // Если карточка перевернута — озвучиваем русский перевод, если нет — английское слово
+            const textToSpeak = isFlipped ? deck[currentIndex].back : deck[currentIndex].front;
+            
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            
+            // Настройка правильного языка для озвучки
+            if (isFlipped) {
+                utterance.lang = 'ru-RU'; // Для обратной стороны включаем русский голос
+            } else {
+                utterance.lang = 'en-US'; // Для лицевой стороны включаем английский голос
+            }
+            
+            window.speechSynthesis.cancel(); // Сбрасываем текущую озвучку, если она работает
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Выделенная функция автопроизношения только для английского текста на лицевой стороне
+        function autoSpeakFront(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            window.speechSynthesis.cancel(); 
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Инициализация первой карточки
+        // Безопасный запуск после загрузки всей структуры страницы
+        document.addEventListener("DOMContentLoaded", () => {
+            updateCard();
+        });
+
+    </script>
+</body>
+</html>
