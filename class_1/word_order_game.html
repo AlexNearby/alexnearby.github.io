@@ -2,20 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Критически важно для мобильных: запрещает лишний автоматический масштаб -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Word Order Game</title>
+    <!-- Подключение файла с дизайн-токенами -->
+    <link href="/class_1/theme.css" rel="stylesheet">
     <style>
-        /* Базовые сбросы для мобильных устройств */
+        /* ===== БАЗОВЫЙ СБРОС (только для этого компонента) ===== */
         * {
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent; /* Убирает синюю рамку при тапе на iOS/Android */
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
         }
         
+        /* ===== УНИКАЛЬНЫЕ СТИЛИ (сетка, отступы, геометрия — НЕ из темы) ===== */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
+            /* font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; */
+            /* background-color: #f0f2f5; */
             padding: 12px;
             display: flex;
             flex-direction: column;
@@ -24,35 +27,31 @@
             justify-content: flex-start;
         }
 
+        /* Контейнер игры — использует .m3-card для базовых стилей */
         .game-container {
-            background-color: white;
             padding: 16px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             width: 100%;
             max-width: 600px;
             margin-top: 8px;
         }
 
-        h1 {
-            font-size: 22px;
-            color: #222;
+        /* Заголовок — используем .m3-title */
+        .game-container h1 {
             margin: 0 0 4px 0;
             text-align: center;
         }
 
+        /* Прогресс — используем .m3-body */
         .progress {
-            font-size: 13px;
-            color: #777;
             margin-bottom: 12px;
             text-align: center;
             font-weight: 500;
         }
 
-        /* Адаптивный блок перевода */
+        /* Блок перевода — уникальные отступы и рамка, цвет через var(--color-alert) */
         .translation-box {
             background-color: #dbe5ff;
-            border-left: 4px solid #2563eb;
+            border-left: 4px solid var(--color-primary);
             padding: 12px;
             margin-bottom: 16px;
             border-radius: 8px;
@@ -63,11 +62,11 @@
             text-align: left;
         }
 
-        /* Поля для кирпичиков адаптированы под пальцы */
+        /* Поля для кирпичиков — уникальные отступы и стили */
         .field {
             border: 2px dashed #cbd5e1;
             border-radius: 10px;
-            min-height: 90px; /* Чуть выше, чтобы помещались крупные кирпичики */
+            min-height: 90px;
             margin-bottom: 14px;
             padding: 8px;
             display: flex;
@@ -88,15 +87,16 @@
         }
 
         #target-field {
-            border-color: #3b82f6;
+            border-color: var(--color-primary);
             background-color: #eff6ff;
         }
 
-        /* Крупные «кирпичики» для удобного тапа на смартфонах */
+        /* Кирпичики — используют var(--color-success) для фона */
         .word-brick {
+            /* background-color: var(--color-success); */
             background-color: #10b981;
             color: white;
-            padding: 12px 16px; /* Увеличенные отступы под размер пальца */
+            padding: 12px 16px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
@@ -109,7 +109,6 @@
             text-align: center;
         }
 
-        /* На мобильных :hover не всегда работает корректно, используем активное состояние */
         .word-brick:active {
             transform: scale(0.96);
             opacity: 0.9;
@@ -121,14 +120,15 @@
         }
 
         .word-brick.wrong {
-            background-color: #ef4444 !important;
+            /* background-color: var(--color-warning) !important; */
+            background-color: #ef4444  !important;
             animation: shake 0.3s ease-in-out;
         }
 
-        /* Мобильная панель кнопок управления */
+        /* Панель кнопок управления — уникальная сетка */
         .controls {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* Кнопки становятся в удобную сетку */
+            grid-template-columns: 1fr 1fr;
             gap: 8px;
             margin-top: 16px;
         }
@@ -150,10 +150,28 @@
             opacity: 0.85;
         }
 
-        .btn-check { background-color: #2563eb; grid-column: span 2; font-size: 16px; padding: 16px 10px; } /* Главная кнопка шире остальных */
-        .btn-giveup { background-color: #d93131; }
-        .btn-next { background-color: #10b981; grid-column: span 2; font-size: 16px; padding: 16px 10px; }
-        .btn-reset { background-color: #98a7bd; }
+        /* Кнопки с использованием цветов из дизайн-системы */
+        .btn-check {
+            /* background-color: var(--color-primary); */
+            background-color: #2980b9;
+            grid-column: span 2;
+            font-size: 16px;
+            padding: 16px 10px;
+        }
+        .btn-giveup {
+            /* background-color: var(--color-error); */
+            background-color: #98a7bd;
+        }
+        .btn-next {
+            /* background-color: var(--color-success); */
+            background-color: #10b981;
+            grid-column: span 2;
+            font-size: 16px;
+            padding: 16px 10px;
+        }
+        .btn-reset {
+            background-color: #e67e22 ;
+        }
         
         #result-message {
             margin-top: 14px;
@@ -163,11 +181,13 @@
             line-height: 1.4;
         }
         
-        .success-text { color: #10b981; }
-        .error-text { color: #ef4444; }
-        .info-text { color: #f59f00; }
+        /* Цвета для сообщений — используем переменные */
+        /* .success-text { color: var(--color-success); } */
+        .success-text { color: #178568; }
+        /* .error-text { color: var(--color-error); } */
+        .error-text { color:#ef2a1f; }
+        .info-text { color: var(--color-tertiary); }
 
-        /* Эффект легкого дрожания для ошибок */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-4px); }
@@ -177,9 +197,9 @@
 </head>
 <body>
 
-<div class="game-container">
-    <h1>Word Order Game</h1>
-    <div id="progress" class="progress">Sentence 1 of 4</div>
+<div class="game-container m3-card">
+    <h1 class="m3-title">Word Order Game</h1>
+    <div id="progress" class="progress m3-body" style="font-weight:500;">Sentence 1 of 4</div>
     
     <div id="translation" class="translation-box"></div>
     
@@ -192,18 +212,16 @@
     <div class="controls">
         <button class="btn-check" id="btn-check" onclick="checkResult()">Check Answer</button>
         <button class="btn-next" id="btn-next" onclick="nextSentence()" style="display: none;">Next Sentence ➔</button>
-        <button class="btn-giveup" id="btn-giveup" onclick="giveUp()">Give Up</button>
         <button class="btn-reset" onclick="resetCurrent()">Reset</button>
+        <button class="btn-giveup" id="btn-giveup" onclick="giveUp()">Give Up</button>
     </div>
     
     <div id="result-message"></div>
 </div>
 
 <script>
-    // НОВЫЙ ФОРМАТ МАССИВА С ПЕРЕВОДОМ
-    // Укажите английский вариант в 'en' и русский перевод в 'ru'
     const sentences = [
-        {
+ {
             en: "I like to ride a bicicle",
             ru: "Я люблю кататься на велосипеде"
         },
@@ -275,6 +293,7 @@
 
     let currentIndex = 0;
     let currentWords = [];
+    let isMoving = false;
 
     const sourceField = document.getElementById("source-field");
     const targetField = document.getElementById("target-field");
@@ -294,6 +313,34 @@
         return array;
     }
 
+    function getDragAfterElement(container, x, y) {
+        const draggableElements = [...container.querySelectorAll('.word-brick:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const isInsideY = y >= box.top && y <= box.bottom;
+            const offsetX = x - (box.left + box.width / 2);
+            if (isInsideY && offsetX < 0 && offsetX > closest.offset) {
+                return { offset: offsetX, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function setupDragAndDropHandlers(field) {
+        field.addEventListener('dragover', e => {
+            e.preventDefault();
+            const draggingBrick = document.querySelector('.dragging');
+            if (!draggingBrick) return;
+            const afterElement = getDragAfterElement(field, e.clientX, e.clientY);
+            if (afterElement == null) {
+                field.appendChild(draggingBrick);
+            } else {
+                field.insertBefore(draggingBrick, afterElement);
+            }
+        });
+    }
+
     function initGame() {
         sourceField.innerHTML = "";
         targetField.innerHTML = "";
@@ -302,25 +349,19 @@
         btnGiveUp.style.display = "inline-block";
         
         progressText.innerText = `Sentence ${currentIndex + 1} of ${sentences.length}`;
-        
-        // Выводим подсказку-перевод сверху
         translationText.innerText = `Translate the following text: ${sentences[currentIndex].ru}`;
         
-        // Разбиваем текущую английскую строку на массив слов
         currentWords = sentences[currentIndex].en.split(" ");
-        
-        // Создаем копию для перемешивания
         const shuffledWords = shuffle([...currentWords]);
         
         shuffledWords.forEach((word) => {
             const brick = document.createElement("div");
             brick.className = "word-brick";
-            brick.draggable = true; // 1. ИСПРАВЛЕНО: Включили встроенный Drag-and-Drop браузера
+            brick.draggable = true;
             brick.innerText = word;
             
-            // Клик для быстрого переноса (срабатывает, только если не было движения)
             brick.onclick = function() {
-                if (isMoving) return; // Проверка флага движения
+                if (isMoving) return;
                 clearHighlights();
                 if (brick.parentElement === sourceField) {
                     targetField.appendChild(brick);
@@ -329,7 +370,6 @@
                 }
             };
 
-            // 2. ИСПРАВЛЕНО: Добавлены нативные события для ПК (Мышь)
             brick.addEventListener('dragstart', () => {
                 brick.classList.add('dragging');
                 clearHighlights();
@@ -338,7 +378,6 @@
                 brick.classList.remove('dragging');
             });
 
-            // 3. ИСПРАВЛЕНО: Добавлены нативные события для Смартфонов (Палец)
             brick.addEventListener('touchstart', (e) => {
                 isMoving = false;
                 brick.classList.add('dragging');
@@ -348,10 +387,8 @@
             brick.addEventListener('touchmove', (e) => {
                 isMoving = true;
                 const touch = e.touches[0];
-                // Находим элемент под пальцем в момент движения
                 const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
                 if (!targetElement) return;
-                
                 const currentField = targetElement.closest('.field');
                 if (currentField) {
                     const afterElement = getDragAfterElement(currentField, touch.clientX, touch.clientY);
@@ -365,7 +402,7 @@
 
             brick.addEventListener('touchend', () => {
                 brick.classList.remove('dragging');
-                setTimeout(() => { isMoving = false; }, 80); // Сброс флага с микрозадержкой
+                setTimeout(() => { isMoving = false; }, 80);
             });
             
             sourceField.appendChild(brick);
@@ -442,57 +479,19 @@
         if (currentIndex < sentences.length - 1) {
             currentIndex++;
         } else {
-            currentIndex = 0; // Возвращаемся к первому предложению после финиша
+            currentIndex = 0;
         }
         initGame();
     }
-
-    // Добавлено в начало тега <script>
-    let isMoving = false; // Флаг отслеживания движения
-
-    // Слушатель для полей: позволяет бросать элементы внутрь себя
-    function setupDragAndDropHandlers(field) {
-        field.addEventListener('dragover', e => {
-            e.preventDefault();
-            const draggingBrick = document.querySelector('.dragging');
-            if (!draggingBrick) return;
-            const afterElement = getDragAfterElement(field, e.clientX, e.clientY);
-            if (afterElement == null) {
-                field.appendChild(draggingBrick);
-            } else {
-                field.insertBefore(draggingBrick, afterElement);
-            }
-        });
-    }
-
-    // Попиксельный расчет: ищет ближайший кирпичик, перед которым находится палец/курсор
-    function getDragAfterElement(container, x, y) {
-        const draggableElements = [...container.querySelectorAll('.word-brick:not(.dragging)')];
-        
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const isInsideY = y >= box.top && y <= box.bottom;
-            const offsetX = x - (box.left + box.width / 2);
-            
-            if (isInsideY && offsetX < 0 && offsetX > closest.offset) {
-                return { offset: offsetX, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
-
-    // Запуск обработчиков для обоих полей
-    setupDragAndDropHandlers(targetField);
-    setupDragAndDropHandlers(sourceField);
 
     function resetCurrent() {
         initGame();
     }
 
+    setupDragAndDropHandlers(targetField);
+    setupDragAndDropHandlers(sourceField);
     initGame();
 </script>
-
 
 </body>
 </html>

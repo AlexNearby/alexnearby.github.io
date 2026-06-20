@@ -1,0 +1,150 @@
+/* ==========================================================================
+   БАЗОВЫЕ ДИЗАЙН-ТОКЕНЫ И ЦВЕТА
+   Совместимо с Material 3 AppColorScheme (Light Theme)
+   ========================================================================== */
+
+:root {
+    /* ----- Базовые токены цветов ----- */
+    --blue-80: #9ECAFF;
+    --blue-40: #3F80A2;
+    --text-secondary-40: #6C8A9E;
+    --mint-40: #006B4F;
+    --orange-40: #F57C00; /* Яркий оранжевый акцент */
+    --light-background: #E3F2FD;
+    --light-surface: #FFFFFF;
+
+    /* ----- Семантическая карта цветов ----- */
+    --color-primary: var(--blue-40);
+    --color-secondary: var(--mint-40);
+    --color-tertiary: var(--orange-40);
+    --color-background: var(--light-background);
+    --color-surface: var(--light-surface);
+    --color-surface-variant: var(--light-surface);
+
+    --color-primary-container: var(--blue-80);
+    --color-secondary-container: var(--blue-80);
+    --color-surface-container: var(--light-surface);
+
+    --color-on-primary: #FFFFFF;
+    --color-on-secondary: #FFFFFF;
+    --color-on-background: var(--blue-40);
+    --color-on-surface: var(--blue-40);
+    --color-on-surface-variant: var(--text-secondary-40);
+
+    --color-outline: #73777F;
+    --color-outline-variant: #C3C6CF;
+
+    /* ----- Токены статусных уведомлений ----- */
+    --color-error: #B3261E;
+    --color-on-error: #FFFFFF;
+    --color-warning: #E65100;
+    --color-on-warning: #FFFFFF;
+    --color-alert: #0288D1;
+    --color-on-alert: #FFFFFF;
+    --color-success: #006B4F; /* Яркий зеленый */
+    --color-on-success: #FFFFFF;
+}
+
+/* ==========================================================================
+   ГЛОБАЛЬНЫЙ СБРОС ДЛЯ ТЕКСТА И ЭЛЕМЕНТОВ
+   Убирает влияние на уникальную геометрию будущих сложных компонентов
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+    font-family: 'Comic Sans MS', 'Segoe UI', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   ТИПОГРАФИКА И ЗАГОЛОВКИ (Единый стиль текста)
+   ========================================================================== */
+h1 {
+    color: var(--color-on-surface);
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 1.8rem;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
+}
+
+.formal-font{
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+}
+
+/* Крупные заголовки, названия экранов или карточек */
+.m3-title {
+    color: var(--color-on-surface);
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.4;
+}
+
+/* Маленькие надписи над заголовками, категории, подписи */
+.m3-subtitle {
+    color: var(--color-on-surface-variant);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+/* Стандартный текст описаний, списков и параграфов */
+.m3-body {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #44474E; /* Нейтральный темный для M3 */
+}
+
+/* Текст внутри основных интерактивных кнопок */
+.m3-btn-primary-text {
+    color: var(--color-on-primary);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* Ссылки (Уникальные, но поддерживающие общую гамму) */
+.m3-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.m3-link:hover {
+    color: var(--color-tertiary); /* При ховере подсвечивается оранжевым */
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   БАЗОВЫЕ КАРТОЧКИ И БЛОКИ (Только фон, скругление и тени)
+   ========================================================================== */
+.m3-card {
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
+    border-radius: 24px; /* Фирменное крупное скругление Material 3 */
+    box-shadow: 0 4px 12px rgba(63, 128, 162, 0.04);
+    /* Внутренние padding и внешние margin здесь НЕ задаются, 
+       так как они уникальны для каждого сложного компонента */
+}
+
+@media (max-width: 300px) {
+  /* Укажите здесь ваши стили, например: */
+  .container {
+    width: 100%;
+    padding: 5px;
+  }
+  
+  .sidebar {
+    display: none; /* Скрываем боковую панель на очень узких экранах */
+  }
+  
+  body {
+    font-size: 12px;
+  }
+}

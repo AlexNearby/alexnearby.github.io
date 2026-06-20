@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>English Menu</title>
+    <title>English Menu · Design System</title>
+    <link href="/class_1/theme.css" rel="stylesheet">
     <style>
-        /* Сброс стилей и базовые настройки */
+        /* ===== БАЗОВЫЙ СБРОС (только для этого компонента) ===== */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Comic Sans MS', 'Segoe UI', Helvetica, Arial, sans-serif;
         }
 
+        /* ===== УНИКАЛЬНАЯ СЕТКА И ГЕОМЕТРИЯ (НЕ ИЗ ТЕМЫ) ===== */
         body {
-            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            /* background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -22,16 +23,18 @@
             padding: 20px;
         }
 
-        /* Заголовок страницы */
-        h1 {
+        /* страничный заголовок – НЕ .m3-title (у него свои стили), но мы даём ему уникальный вид */
+        /* .page-headline {
             color: #2c3e50;
             margin-bottom: 30px;
             text-align: center;
             font-size: 1.8rem;
             text-shadow: 1px 1px 2px rgba(255,255,255,0.7);
-        }
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        } */
 
-        /* Сетка для меню */
+        /* ===== СЕТКА МЕНЮ (УНИКАЛЬНАЯ) ===== */
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -41,137 +44,166 @@
             padding: 0 10px;
         }
 
-        /* Карточка каждого урока/раздела */
+        /* ===== КАРТОЧКИ МЕНЮ (наследуют .m3-card, но мы добавляем уникальные отступы/радиусы) ===== */
         .menu-item {
-            background-color: #ffffff;
-            border-radius: 20px;
+            /* тема: фон, тень, рамка, скругление — уже есть в .m3-card */
+            /* но мы добавляем уникальные внутренние отступы и поведение */
             padding: 25px 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            /* сохраняем кастомный переход и трансформацию */
             transition: all 0.2s ease;
+            /* цветные бордюры сверху — оставляем, они часть дизайна */
+            border-top: 6px solid transparent; /* базовый фон, потом переопределим */
         }
 
-        /* Эффект при нажатии (для телефонов) */
         .menu-item:active {
             transform: scale(0.95);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
-        /* Иконка урока */
+        /* цветовые акценты (уникальные) */
+        .item-1 { border-top-color: #FF6B6B; }
+        .item-2 { border-top-color: #4ECDC4; }
+        .item-3 { border-top-color: #FFD166; }
+        .item-4 { border-top-color: #118AB2; }
+
+        /* ===== ИКОНКИ (УНИКАЛЬНЫЕ РАЗМЕРЫ) ===== */
         .icon {
-            font-size: 3.5rem;
-            margin-bottom: 12px;
-        }
-
-        /* Название урока */
-        .title {
-            color: #34495e;
-            font-size: 1.1rem;
-            font-weight: bold;
-            text-align: center;
-            line-height: 1.3;
-        }
-
-        /* Цветовые вариации для каждой кнопки */
-        .item-1 { border-top: 6px solid #FF6B6B; }
-        .item-2 { border-top: 6px solid #4ECDC4; }
-        .item-3 { border-top: 6px solid #FFD166; }
-        .item-4 { border-top: 6px solid #118AB2; }
-
-        .menu-item .icon {
-            width: 48px;  /* Задайте нужную вам ширину иконки */
-            height: 48px; /* Задайте нужную вам высоту иконки */
+            width: 80px;      /* увеличенный размер, чтобы SVG были видны */
+            height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-bottom: 12px;
         }
 
-        .menu-item .icon svg {
+        .icon svg {
             width: 100%;
             height: 100%;
             object-fit: contain;
+            display: block;
         }
 
+        /* ===== ТЕКСТЫ: используем .m3-body + уникальный цвет/вес ===== */
+        .menu-title {
+            /* класс .m3-body даст 14px, цвет #44474E, но мы переопределяем под дизайн */
+            font-weight: 700;
+            color: #34495e;
+            text-align: center;
+            line-height: 1.3;
+            font-size: 1.1rem;  /* сохраняем оригинальный размер */
+        }
+
+        /* ===== АДАПТАЦИЯ ПОД МАЛЫЕ ЭКРАНЫ (не ломаем сетку) ===== */
+        @media (max-width: 400px) {
+            .menu-grid {
+                gap: 12px;
+            }
+            .icon {
+                width: 64px;
+                height: 64px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <h1>🚀 Choose your game:</h1>
+    <!-- заголовок – используем кастомный класс, НЕ .m3-title (чтобы не переопределять глобально) -->
+    <h1 class="page-headline">🚀 Choose your game:</h1>
+
     <div class="menu-grid">
-                
-        <!-- Кнопка 1: Флеш-карты -->
-        <a href="https://alexnearby.github.io/class_1/flash_cards.html" class="menu-item item-1">
+
+        <!-- ===== КАРТОЧКА 1 · FLASHCARDS ===== -->
+        <a href="/class_1/flash_cards.html" class="menu-item m3-card item-1">
             <div class="icon">
+                <!-- SVG остаётся без изменений (как просили) -->
                 <svg xmlns="http://w3.org" viewBox="0 0 256 256" width="100%" height="100%">
                     <defs>
                         <style>
                             .fc-card-new { rx: 16px; }
-                            .fc-back { fill: #5C6BC0; }    /* Глубокий индиго */
-                            .fc-mid { fill: #26A69A; }     /* Мятный зеленый */
-                            .fc-front { fill: #FFAB91; }   /* Нежный персиковый */
+                            .fc-back { fill: #5C6BC0; }
+                            .fc-mid { fill: #26A69A; }
+                            .fc-front { fill: #FFAB91; }
                             .fc-display { fill: #FFFFFF; rx: 8px; }
                             .fc-letter { fill: #4E342E; font-family: 'Montserrat', Arial, sans-serif; font-size: 58px; font-weight: 800; letter-spacing: -2; }
                             .fc-line-new { stroke: #4E342E; stroke-width: 8; stroke-linecap: round; opacity: 0.8; }
                         </style>
                     </defs>
-                    <!-- Задняя карточка -->
                     <rect class="fc-card-new fc-back" x="30" y="20" width="140" height="190" />
-                    <!-- Средняя карточка -->
                     <rect class="fc-card-new fc-mid" x="58" y="38" width="140" height="190" />
-                    <!-- Передняя карточка -->
                     <rect class="fc-card-new fc-front" x="86" y="56" width="140" height="190" />
-                    
-                    <!-- Белое поле для текста -->
                     <rect class="fc-display" x="106" y="76" width="100" height="80" />
                     <text class="fc-letter" x="116" y="136">Aa</text>
-                    
-                    <!-- Декоративные линии текста -->
                     <line class="fc-line-new" x1="116" y1="180" x2="196" y2="180" />
                     <line class="fc-line-new" x1="116" y1="202" x2="165" y2="202" />
                 </svg>
             </div>
-            <div class="title">Flashcards</div>
+            <!-- Заголовок теперь использует .m3-body как базу + кастомные стили -->
+            <span class="menu-title m3-body">Flashcards</span>
         </a>
-        <!-- Кнопка 2: Порядок слов -->
-        <a href="https://alexnearby.github.io/class_1/word_order_game.html" class="menu-item item-2">
+
+        <!-- ===== КАРТОЧКА 2 · WORD ORDER ===== -->
+        <a href="/class_1/word_order_game.html" class="menu-item m3-card item-2">
             <div class="icon">
                 <svg xmlns="http://w3.org" viewBox="0 0 256 256" width="100%" height="100%">
                     <defs>
                         <style>
-                            .tile-w { fill: #FFB74D; rx: 16px; } /* Пастельный оранжевый */
-                            .tile-o { fill: #FF8A80; rx: 16px; } /* Пастельный коралловый */
-                            .tile-r { fill: #4DB6AC; rx: 16px; } /* Пастельный бирюзовый */
-                            .tile-d { fill: #BA68C8; rx: 16px; } /* Пастельный фиолетовый */
+                            .tile-w { fill: #FFB74D; rx: 16px; }
+                            .tile-o { fill: #FF8A80; rx: 16px; }
+                            .tile-r { fill: #4DB6AC; rx: 16px; }
+                            .tile-d { fill: #BA68C8; rx: 16px; }
                             .wo-text-new { fill: #FFFFFF; font-family: 'Montserrat', 'Arial Black', sans-serif; font-size: 64px; font-weight: 900; text-anchor: middle; dominant-baseline: central; }
                         </style>
                     </defs>
-                    <!-- Плитка W -->
                     <g transform="translate(25, 25)">
                         <rect class="tile-w" x="0" y="0" width="96" height="96" />
                         <text class="wo-text-new" x="48" y="50">W</text>
                     </g>
-                    <!-- Плитка O -->
                     <g transform="translate(135, 25)">
                         <rect class="tile-o" x="0" y="0" width="96" height="96" />
                         <text class="wo-text-new" x="48" y="50">O</text>
                     </g>
-                    <!-- Плитка R -->
                     <g transform="translate(25, 135)">
                         <rect class="tile-r" x="0" y="0" width="96" height="96" />
                         <text class="wo-text-new" x="48" y="50">R</text>
                     </g>
-                    <!-- Плитка D -->
                     <g transform="translate(135, 135)">
                         <rect class="tile-d" x="0" y="0" width="96" height="96" />
                         <text class="wo-text-new" x="48" y="50">D</text>
                     </g>
                 </svg>
             </div>
-            <div class="title">Word Order</div>
+            <span class="menu-title m3-body">Word Order</span>
+        </a>
+
+        <!-- ===== КАРТОЧКА 3 · READING & AUDIO ===== -->
+        <a href="/class_1/reading_audio.html" class="menu-item m3-card item-3">
+            <div class="icon">
+                <svg xmlns="http://w3.org" viewBox="0 0 256 256" width="100%" height="100%">
+                    <defs>
+                        <style>
+                            .book-back { fill: #3F80A2; }
+                            .book-front { fill: #FF7B72; }
+                            .book-spine { fill: #E0665C; }
+                            .book-pages { fill: #FFF5EC; }
+                            .book-mark { fill: #FFB74D; }
+                        </style>
+                    </defs>
+                    <g transform="translate(38, 28)">
+                        <rect class="book-back" x="15" y="25" width="130" height="170" rx="16" transform="rotate(-6 80 110)" />
+                        <rect class="book-pages" x="25" y="10" width="135" height="175" rx="14" />
+                        <rect class="book-front" x="15" y="10" width="130" height="175" rx="14" />
+                        <path class="book-spine" d="M15,10 H27 V185 H15 C7.2,185 1,178.8 1,171 V24 C1,16.2 7.2,10 15,10 Z" />
+                        <path class="book-mark" d="M60,10 H80 V75 L70,65 L60,75 Z" />
+                        <rect class="book-mark" x="45" y="120" width="70" height="14" rx="7" />
+                    </g>
+                </svg>
+            </div>
+            <span class="menu-title m3-body">Reading & Audio</span>
         </a>
 
     </div>

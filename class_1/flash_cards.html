@@ -2,26 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- viewport-fit=cover сообщает браузеру использовать абсолютно весь экран смартфона -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TTS Flashcards</title>
+    <!-- Подключение файла с дизайн-токенами -->
+    <link href="/class_1/theme.css" rel="stylesheet">
     <style>
+        /* ===== БАЗОВЫЙ СБРОС (только для этого компонента) ===== */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
         }
         
+        /* ===== УНИКАЛЬНЫЕ СТИЛИ (сетка, отступы, геометрия — НЕ из темы) ===== */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            /* Использование svh вместо vh решает проблему скрытия под нижней панелью браузера */
-            height: 100svh; 
-            background-color: #f8f9fa;
-            margin: 0;
-            /* Динамические отступы снизу и сверху для обхода системных полос навигации */
+            height: 100svh;
+            background-color:  var(--color-background);
             padding: calc(10px + env(safe-area-inset-top)) 15px calc(15px + env(safe-area-inset-bottom)) 15px;
             position: relative;
             overflow: hidden;
@@ -34,7 +36,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #f8f9fa;
+            background-color:  var(--color-background);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -44,18 +46,20 @@
             padding: 20px;
             text-align: center;
         }
+        
+        /* Заголовок стартового экрана — используем .m3-title */
         .welcome-screen h1 {
-            color: #212529;
-            font-size: 28px;
             margin-bottom: 25px;
         }
+        
+        /* Кнопка старта — используем кастомные стили с акцентом var(--color-primary) */
         .start-btn {
             width: 80%;
             max-width: 280px;
             padding: 16px 20px;
             font-size: 20px;
             font-weight: bold;
-            background-color: #007bff;
+            background-color: var(--color-primary);
             border: none;
             color: white;
             border-radius: 12px;
@@ -63,13 +67,16 @@
             box-shadow: 0 4px 12px rgba(0,123,255,0.3);
             margin-top: 20px;
         }
+        .start-btn:active {
+            background-color: var(--color-alert);
+        }
 
-        /* Контейнер карточки (немного уменьшена высота для 100% вместимости органов управления) */
+        /* Контейнер карточки — уникальные размеры, использует .m3-card для фона/скругления/тени */
         .card-container {
             perspective: 1000px;
             width: 100%;
             max-width: 400px;
-            height: 48vh; /* Снижено с 55vh, чтобы гарантировать отсутствие срезов */
+            height: 48vh;
             max-height: 320px;
             min-height: 240px;
             cursor: pointer;
@@ -81,13 +88,15 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            /* transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); */
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             border-radius: 16px;
         }
         .card.flipped {
             transform: rotateY(180deg);
         }
+        
+        /* Лица карточки — наследуют .m3-card, но с уникальными отступами и позиционированием */
         .card-face {
             position: absolute;
             width: 100%;
@@ -98,23 +107,21 @@
             align-items: center;
             justify-content: center;
             border-radius: 16px;
-            background-color: white;
             padding: 20px;
             text-align: center;
-            border: 1px solid rgba(0,0,0,0.03);
         }
         .card-front {
             color: #212529;
         }
         .card-back {
-            background-color: #007bff;
+            background-color: var(--color-primary);
             color: white;
             transform: rotateY(180deg);
         }
         
-        /* Стили текста на карточке */
+        /* Стили текста на карточке — используем .m3-title и .m3-body с инлайн-корректировками */
         .card-front .main-text {
-            font-size: 40px; /* Чуть уменьшено с 44px для защиты от переносов длинных слов */
+            font-size: 40px;
             font-weight: 800;
             letter-spacing: -1px;
             margin-bottom: 10px;
@@ -139,13 +146,13 @@
             font-weight: 400;
         }
 
-        /* Панель управления внизу экрана */
+        /* Панель управления внизу экрана — уникальные отступы и сетка */
         .controls-container {
             width: 100%;
             max-width: 400px;
             display: flex;
             flex-direction: column;
-            gap: 10px; /* Снижен шаг */
+            gap: 10px;
             margin-top: auto;
         }
 
@@ -155,10 +162,10 @@
             width: 100%;
         }
 
-        /* Кнопки */
+        /* Кнопки управления — используют цвета из дизайн-системы */
         button {
             flex: 1;
-            height: 48px; /* Оптимальная высота, не уходящая за пределы */
+            height: 48px;
             font-size: 16px;
             font-weight: 600;
             border: none;
@@ -171,13 +178,13 @@
         button:active { background-color: #dee2e6; }
         
         .audio-btn {
-            flex: 1.2; 
-            background-color: #17a2b8;
+            flex: 1.2;
+            background-color: var(--color-primary);
             color: white;
         }
-        .audio-btn:active { background-color: #138496; }
+        .audio-btn:active { background-color: var(--text-secondary-40); }
         
-        /* Переключатель */
+        /* Переключатель — кастомный с уникальными отступами */
         .autoplay-label {
             display: flex;
             align-items: center;
@@ -196,6 +203,11 @@
             border: 1px solid #e9ecef;
             box-shadow: 0 2px 6px rgba(0,0,0,0.02);
         }
+        .next-btn, .prev-btn{
+            background: #ffffff;
+            color: var(--color-primary);
+            box-shadow: 0 4px 12px rgba(63, 128, 162, 0.04);
+        }
         .controls-container .autoplay-label {
             max-width: 100%;
         }
@@ -205,15 +217,16 @@
             height: 18px;
             margin: 0;
         }
+
     </style>
 </head>
 <body>
 
-    <!-- Стартовый экран (Переключатель теперь здесь тоже есть) -->
+    <!-- Стартовый экран -->
     <div class="welcome-screen" id="welcome-screen">
         <h1>English Flashcards</h1>
         
-        <label class="autoplay-label">
+        <label class="autoplay-label formal-font">
             <input type="checkbox" id="welcome-autoplay-toggle" checked onchange="syncToggles(this)">
             Auto-Speak words
         </label>
@@ -221,32 +234,31 @@
         <button class="start-btn" onclick="startLearning()">Start Learning</button>
     </div>
 
-    <!-- Блок карточки -->
+    <!-- Блок карточки — используем .m3-card для базовых стилей -->
     <div class="card-container" onclick="flipCard()">
         <div class="card" id="card">
-            <div class="card-face card-front">
-                <div class="main-text" id="front-text">...</div>
-                <div class="transcription" id="transcription-text">...</div>
+            <div class="card-face card-front m3-card">
+                <div class="main-text m3-title" style="font-size:40px; margin-bottom:10px;" id="front-text">...</div>
+                <div class="transcription m3-body" style="font-size:22px; color:#5a6268;" id="transcription-text">...</div>
             </div>
-            <div class="card-face card-back">
-                <div class="main-text" id="back-text">...</div>
-                <div class="explanation" id="explanation-text">...</div>
+            <div class="card-face card-back" style="background-color:var(--color-primary);">
+                <div class="main-text m3-title" style="font-size:30px; color:white; margin-bottom:8px;" id="back-text">...</div>
+                <div class="explanation m3-body" style="font-size:15px; color:rgba(255,255,255,0.9); margin-top:10px;" id="explanation-text">...</div>
             </div>
         </div>
     </div>
 
     <!-- Мобильная панель управления -->
-    <div class="controls-container">
-        <!-- Переключатель в основном интерфейсе приложения -->
+    <div class="controls-container formal-font">
         <label class="autoplay-label">
             <input type="checkbox" id="autoplay-toggle" checked onchange="syncToggles(this)">
             Auto-Speak words
         </label>
 
         <div class="controls">
-            <button onclick="prevCard(event)">◀ Prev</button>
+            <button class="next-btn" onclick="prevCard(event)">◀ Prev</button>
             <button class="audio-btn" onclick="speakText(event)">🔊 Speak</button>
-            <button onclick="nextCard(event)">Next ▶</button>
+            <button class="prev-btn" onclick="nextCard(event)">Next ▶</button>
         </div>
     </div>
 
@@ -340,6 +352,7 @@
             { front: "book", transcription: "/bʊk/", back: "книга", explanation: "Предмет с бумажными страницами, который читают." },
             { front: "pen", transcription: "/pen/", back: "ручка", explanation: "Предмет, которым пишут чернилами." },
             { front: "school", transcription: "/skuːl/", back: "школа", explanation: "Место, где учатся дети." },
+        
         ];
 
         let currentIndex = 0;
@@ -350,6 +363,12 @@
         const explanationText = document.getElementById('explanation-text');
         const autoplayToggle = document.getElementById('autoplay-toggle');
         const welcomeScreen = document.getElementById('welcome-screen');
+
+        function syncToggles(source) {
+            const isChecked = source.checked;
+            document.getElementById('autoplay-toggle').checked = isChecked;
+            document.getElementById('welcome-autoplay-toggle').checked = isChecked;
+        }
 
         function startLearning() {
             welcomeScreen.style.opacity = '0';
@@ -381,7 +400,7 @@
         }
 
         function nextCard(event) {
-            event.stopPropagation(); // Останавливает переворот карточки при клике на кнопки
+            event.stopPropagation();
             currentIndex = (currentIndex + 1) % deck.length;
             updateCard();
         }
@@ -392,41 +411,26 @@
             updateCard();
         }
 
-        // Функция для принудительного воспроизведения по кнопке "Speak"
         function speakText(event) {
             event.stopPropagation();
             const isFlipped = cardElement.classList.contains('flipped');
-            
-            // Если карточка перевернута — озвучиваем русский перевод, если нет — английское слово
             const textToSpeak = isFlipped ? deck[currentIndex].back : deck[currentIndex].front;
-            
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            
-            // Настройка правильного языка для озвучки
-            if (isFlipped) {
-                utterance.lang = 'ru-RU'; // Для обратной стороны включаем русский голос
-            } else {
-                utterance.lang = 'en-US'; // Для лицевой стороны включаем английский голос
-            }
-            
-            window.speechSynthesis.cancel(); // Сбрасываем текущую озвучку, если она работает
+            utterance.lang = isFlipped ? 'ru-RU' : 'en-US';
+            window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);
         }
 
-        // Выделенная функция автопроизношения только для английского текста на лицевой стороне
         function autoSpeakFront(text) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US';
-            window.speechSynthesis.cancel(); 
+            window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);
         }
 
-        // Инициализация первой карточки
-        // Безопасный запуск после загрузки всей структуры страницы
         document.addEventListener("DOMContentLoaded", () => {
             updateCard();
         });
-
     </script>
 </body>
 </html>

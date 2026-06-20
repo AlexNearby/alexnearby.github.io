@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading & Audio - Stories</title>
+    <link href="/class_1/theme.css" rel="stylesheet">
+    <style>
+        /* ===== БАЗОВЫЙ СБРОС (только для этого компонента) ===== */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        /* ===== УНИКАЛЬНЫЕ СТИЛИ (сетка, отступы, геометрия — НЕ из темы) ===== */
+        body { 
+            /* font-family: 'Montserrat', sans-serif;  */
+            background-color: #E3F2FD; 
+            color: #2C3E50; 
+            padding: 16px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        
+        .header { 
+            width: 100%; 
+            max-width: 500px; 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 16px; 
+            padding: 8px 0; 
+        }
+        
+        .back-button { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 44px; 
+            height: 44px; 
+            background-color: #FFFFFF; 
+            border-radius: 12px; 
+            text-decoration: none; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            flex-shrink: 0;
+        }
+        
+        /* Заголовок адаптирован под дизайн-систему через .m3-title */
+        .page-title { 
+            margin-left: 16px; 
+            /* убираем возможные margin от .m3-title */
+            margin-top: 0;
+            margin-bottom: 0;
+            line-height: 1.2;
+        }
+        
+        /* Уникальная сетка списка */
+        .stories-list { 
+            width: 100%; 
+            max-width: 500px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 16px; 
+            min-height: 70vh; 
+        }
+        
+        /* Карточка истории — использует .m3-card + уникальные отступы/стили */
+        .story-card { 
+            padding: 16px; 
+            display: flex; 
+            align-items: center; 
+            text-decoration: none; 
+            color: inherit; 
+            /* кастомная тень поверх той, что даёт .m3-card */
+            box-shadow: 0 6px 16px rgba(63,128,162,0.1); 
+        }
+        .story-card.hidden { display: none !important; }
+        
+        .story-icon { 
+            width: 54px; 
+            height: 54px; 
+            flex-shrink: 0; 
+            background-color: #FF7B72; 
+            border-radius: 14px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 8px; 
+        }
+        .story-info { flex-grow: 1; padding: 0 16px; }
+        
+        /* используем .m3-title для названия, но с уникальным цветом */
+        .story-name { 
+            margin-bottom: 4px; 
+            line-height: 1.2; 
+        }
+        
+        /* .m3-subtitle для мета-информации */
+        .story-meta { 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+        }
+        
+        .story-arrow { 
+            width: 32px; 
+            height: 32px; 
+            background-color: #F4F6F8; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            flex-shrink: 0; 
+        }
+
+        /* ===== КАСТОМНЫЙ ВЫПАДАЮЩИЙ СПИСОК (уникальные отступы, без влияния на тему) ===== */
+        .custom-dropdown {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+            z-index: 100;
+        }
+
+        .dropdown-button {
+            width: 100%;
+            padding: 16px 20px;
+            background-color: #FFFFFF;
+            border: none;
+            border-radius: 18px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 15px;
+            font-weight: 900;
+            color: #3F80A2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(63, 128, 162, 0.08);
+            transition: background-color 0.2s;
+        }
+        .dropdown-button:active { background-color: #F8FAFC; }
+
+        .dropdown-arrow {
+            transition: transform 0.2s ease;
+        }
+        .custom-dropdown.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            width: 100%;
+            background-color: #FFFFFF;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(63, 128, 162, 0.15);
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .custom-dropdown.open .dropdown-menu {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2C3E50;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .dropdown-item:active, .dropdown-item:hover {
+            background-color: #E3F2FD;
+            color: #3F80A2;
+        }
+        .dropdown-item.selected {
+            background-color: #3F80A2;
+            color: #FFFFFF;
+            font-weight: 900;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <a href="/class_1/index.html" class="back-button">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3F80A2" stroke-width="3" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </a>
+        <!-- Заголовок теперь использует класс .m3-title -->
+        <h1 class="page-title">Reading & Audio</h1>
+    </header>
+
+    <!-- Кастомный выпадающий список (уникальная логика) -->
+    <div class="custom-dropdown" id="myDropdown">
+        <button class="dropdown-button" onclick="toggleDropdown()">
+            <span id="selectedValue">📚 All Stories</span>
+            <svg class="dropdown-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3F80A2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </button>
+        
+        <div class="dropdown-menu">
+            <div class="dropdown-item selected" onclick="selectItem('all', '📚 All Stories')">📚 All Stories</div>
+            <div class="dropdown-item" onclick="selectItem('level_1', '🔵 Level A0 (Starter)')">🔵 Level 1</div>
+        </div>
+    </div>
+
+    <main class="stories-list">
+        <!-- Карточка истории с .m3-card, уникальные данные уровня -->
+        <a href="/class_1/stories/index.html" class="story-card m3-card" data-level="level_1">
+            <div class="story-icon"><svg viewBox="0 0 24 24" width="100%"><path d="M2,21 C2,21 6,18 12,21 C18,18 22,21 22,21 V5 C22,5 18,2 12,5 C6,2 2,5 2,5 Z" fill="#3F80A2" stroke="#FFFFFF" stroke-width="1.5"/></svg></div>
+            <div class="story-info">
+                <!-- Название → .m3-title (22px, 900) + уникальный цвет -->
+                <div class="story-name m3-title" style="color: #2C3E50; font-size: 16px;">Misha and Barsik</div>
+                <!-- Мета → .m3-subtitle (11px, uppercase) -->
+                <div class="story-meta m3-subtitle" style="color: #8A9BA8;">Level A0 • 1 min</div>
+            </div>
+            <div class="story-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A9BA8" stroke-width="3"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </a>
+    </main>
+
+    <script>
+        const dropdown = document.getElementById('myDropdown');
+
+        function toggleDropdown() {
+            dropdown.classList.toggle('open');
+        }
+
+        function selectItem(level, text) {
+            document.getElementById('selectedValue').innerText = text;
+
+            const items = document.querySelectorAll('.dropdown-item');
+            items.forEach(item => item.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+
+            dropdown.classList.remove('open');
+
+            const cards = document.querySelectorAll('.story-card');
+            cards.forEach(card => {
+                if (level === 'all' || card.getAttribute('data-level') === level) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        window.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>
