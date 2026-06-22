@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Плеер на абсолютную ширину экрана</title>
+    <link href="/сlass_1/theme.css" rel="stylesheet">
+    <style>
+        /* ===== БАЗОВЫЙ СБРОС (только для этого компонента) ===== */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        /* ===== УНИКАЛЬНЫЕ СТИЛИ (сетка, отступы, геометрия — НЕ из темы) ===== */
+        body { 
+            /* font-family: 'Montserrat', sans-serif;  */
+            background-color: #E3F2FD; 
+            color: #2C3E50; 
+            padding: 16px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+
+        /* 1. ПЛЕЕР: ФИКСИРОВАН НА ПОЛНУЮ ШИРИНУ ЭКРАНА */
+        .full-width-player {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%; 
+            z-index: 999; 
+            background-color: #1d1d1f; 
+            color: #ffffff;
+            border-radius: 0px; 
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid var(--color-primary); 
+        }
+
+        /* Кнопки управления */
+        .player-controls-btn {
+            background: var(--color-primary);
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 0px; 
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .player-controls-btn:active {
+            background: var(--color-alert);
+        }
+
+        #restartBtn {
+            background: #424245;
+            font-size: 18px; 
+        }
+        #restartBtn:active {
+            background: #5a5a5e;
+        }
+
+        /* Ползунок хронометража */
+        .seek-slider {
+            flex-grow: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #424245;
+            height: 4px; 
+            outline: none;
+        }
+        .seek-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 0px; 
+            background: var(--color-primary);
+            cursor: pointer;
+        }
+        .seek-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 0px;
+            background: var(--color-primary);
+            cursor: pointer;
+            border: none;
+        }
+
+        .time-display {
+            font-size: 13px;
+            font-family: monospace;
+            color: #86868b;
+            min-width: 35px;
+            text-align: right;
+        }
+
+        #player {
+            display: none;
+        }
+
+        /* 2. КОНТЕНТНЫЙ КОНТЕЙНЕР */
+        .phone-container {
+            width: 100%;
+            max-width: 420px; 
+            display: flex;
+            flex-direction: column;
+            margin-top: 60px; 
+            position: relative;
+        }
+
+        .header { 
+            width: 100%; 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 16px; 
+            padding: 8px 0; 
+        }
+        
+        .back-button { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 44px; 
+            height: 44px; 
+            background-color: #FFFFFF; 
+            border-radius: 12px; 
+            text-decoration: none; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            flex-shrink: 0;
+        }
+        .back-button:active {
+            background-color: #f0f0f0;
+        }
+        
+
+        /* Заголовок адаптирован под дизайн-систему через .m3-title */
+        .page-title { 
+            margin-left: 16px; 
+            /* убираем возможные margin от .m3-title */
+            margin-top: 0;
+            margin-bottom: 0;
+            line-height: 1.2;
+        }
+
+        /* КНОПКА ПЕРЕВОДА в стиле кнопки назад */
+        #translateBtn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000; 
+            background-color: #FFFFFF;
+            border: none;
+            color: #3F80A2;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 0 16px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        #translateBtn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Инверсия цвета при активации перевода */
+        #translateBtn.active-mode {
+            background-color: #3F80A2; 
+            color: #FFFFFF; 
+        }
+
+        .text-content {
+            padding: 10px 0 100px 0; 
+        }
+
+        #transcript {
+            font-size: 22px;
+            line-height: 1.5;
+        }
+
+        /* СТРОКА ФРАЗЫ */
+        .phrase-row {
+            display: block; 
+            background: transparent;
+            margin-bottom: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        /* Английская часть текста — используем .m3-body как базу */
+        .eng-text {
+            color: #2C3E50;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: block;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        /* Русская часть текста (перевод) — используем .m3-body с кастомным цветом */
+        .rus-text {
+            color: #7f8c8d;
+            font-size: 18px;
+            padding: 0px 12px 8px 12px;
+            display: none; 
+        }
+
+        /* РЕЖИМ ДВУХ КОЛОНОК */
+        #transcript.show-translation .phrase-row {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr; 
+            gap: 12px; 
+            background: #ffffff; 
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            overflow: hidden;
+        }
+
+        #transcript.show-translation .eng-text {
+            border-left: 4px solid #3f80a2; 
+            padding: 10px 8px 10px 12px;
+        }
+
+        #transcript.show-translation .rus-text {
+            display: block; 
+            padding: 10px 12px;
+            background-color: #ECEFF1; 
+            font-style: italic; 
+            color: #455A64; 
+        }
+
+        /* ПОДСВЕТКА АКТИВНОЙ ФРАЗЫ */
+        .phrase-row.active {
+            background-color: rgba(0, 113, 227, 0.19);
+            color: var(--color-primary);
+            font-weight: 700;
+        }
+
+        #transcript.show-translation .phrase-row.active {
+            background-color: rgba(0, 113, 227, 0.19);
+        }
+
+        /* Адаптация для маленьких экранов */
+        @media (max-width: 400px) {
+            #transcript.show-translation .phrase-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+                border-radius: 12px;
+            }
+            #transcript.show-translation .rus-text {
+                border-top: 1px solid #e0e0e0;
+                padding: 8px 12px 12px 12px;
+            }
+            #transcript.show-translation .eng-text {
+                border-left: none;
+                border-bottom: none;
+                padding: 10px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Скрытый аудиоплеер -->
+    <audio id="player" src="/сlass_1/stories/A0_My English Bicycle.wav"></audio>
+
+    <!-- Фиксированный плеер во всю ширину -->
+    <div class="full-width-player">
+        <button class="player-controls-btn" id="playBtn" title="Воспроизведение">▶</button>
+        <button class="player-controls-btn" id="restartBtn" title="Начать сначала">↻</button>
+        
+        <input type="range" class="seek-slider" id="seekSlider" min="0" value="0" step="0.1">
+        <span class="time-display" id="timeDisplay">0:00</span>
+    </div>
+
+    <!-- Кнопка перевода -->
+    <button id="translateBtn" title="Показать перевод">Перевод</button>
+
+    <!-- Текстовый блок -->
+    <div class="phone-container">
+        <header class="header">
+            <a href="/сlass_1/reading-audio.html" class="back-button">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3F80A2" stroke-width="3" stroke-linecap="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </a>
+            <h1 class="page-title">Misha and Barsik</h1>
+        </header>
+
+        <div class="text-content formal-font">
+            <div id="transcript">
+
+                <div class="phrase-row" data-start="2.35" data-end="4.62">
+                    <span class="eng-text">I have a bicycle.</span>
+                    <span class="rus-text">У меня есть велосипед.</span>
+                </div>
+
+                <div class="phrase-row" data-start="4.62" data-end="7.50">
+                    <span class="eng-text">It is a big red bicycle.</span>
+                    <span class="rus-text">Это большой красный велосипед.</span>
+                </div>
+
+                <div class="phrase-row" data-start="7.50" data-end="10.50">
+                    <span class="eng-text">I like my bicycle very much.</span>
+                    <span class="rus-text">Мой велосипед мне очень нравится.</span>
+                </div>
+
+                <div class="phrase-row" data-start="10.50" data-end="12.80">
+                    <span class="eng-text">The wheels are black.</span>
+                    <span class="rus-text">Колёса чёрные.</span>
+                </div>
+
+                <div class="phrase-row" data-start="12.80" data-end="15.12">
+                    <span class="eng-text">And the seat is brown.</span>
+                    <span class="rus-text">А сиденье коричневое.</span>
+                </div>
+
+                <div class="phrase-row" data-start="15.12" data-end="17.75">
+                    <span class="eng-text">The bell is yellow and small.</span>
+                    <span class="rus-text">Звонок жёлтый и маленький.</span>
+                </div>
+
+                <div class="phrase-row" data-start="17.75" data-end="20.40">
+                    <span class="eng-text">At first, I cannot ride.</span>
+                    <span class="rus-text">Сначала я не умею кататься.</span>
+                </div>
+
+                <div class="phrase-row" data-start="20.40" data-end="22.38">
+                    <span class="eng-text">I am sad.</span>
+                    <span class="rus-text">Мне грустно.</span>
+                </div>
+
+                <div class="phrase-row" data-start="22.38" data-end="25.62">
+                    <span class="eng-text">The bicycle is big and difficult.</span>
+                    <span class="rus-text">Велосипед большой и трудный.</span>
+                </div>
+
+                <div class="phrase-row" data-start="25.62" data-end="28.52">
+                    <span class="eng-text">I fall down on the green grass.</span>
+                    <span class="rus-text">Я падаю на зелёную траву.</span>
+                </div>
+
+                <div class="phrase-row" data-start="28.52" data-end="30.92">
+                    <span class="eng-text">But I try every day.</span>
+                    <span class="rus-text">Но я пробую каждый день.</span>
+                </div>
+
+                <div class="phrase-row" data-start="30.92" data-end="33.15">
+                    <span class="eng-text">I try on Monday.</span>
+                    <span class="rus-text">Я пробую в понедельник.</span>
+                </div>
+
+                <div class="phrase-row" data-start="33.15" data-end="35.48">
+                    <span class="eng-text">I try on Tuesday.</span>
+                    <span class="rus-text">Я пробую во вторник.</span>
+                </div>
+
+                <div class="phrase-row" data-start="35.48" data-end="37.75">
+                    <span class="eng-text">I try and I try.</span>
+                    <span class="rus-text">Я пробую и пробую.</span>
+                </div>
+
+                <div class="phrase-row" data-start="37.75" data-end="40.35">
+                    <span class="eng-text">I hold the black handles.</span>
+                    <span class="rus-text">Я держусь за чёрные ручки.</span>
+                </div>
+
+                <div class="phrase-row" data-start="40.35" data-end="42.38">
+                    <span class="eng-text">I look forward.</span>
+                    <span class="rus-text">Я смотрю вперёд.</span>
+                </div>
+
+                <div class="phrase-row" data-start="42.38" data-end="45.00">
+                    <span class="eng-text">My feet are on the pedals.</span>
+                    <span class="rus-text">Мои ноги на педалях.</span>
+                </div>
+
+                <div class="phrase-row" data-start="45.00" data-end="47.15">
+                    <span class="eng-text">Then, one day...</span>
+                    <span class="rus-text">И вот, однажды...</span>
+                </div>
+
+                <div class="phrase-row" data-start="47.15" data-end="49.00">
+                    <span class="eng-text">I ride!</span>
+                    <span class="rus-text">Я еду!</span>
+                </div>
+
+                <div class="phrase-row" data-start="49.00" data-end="51.25">
+                    <span class="eng-text">I am very happy!</span>
+                    <span class="rus-text">Я очень счастлив!</span>
+                </div>
+
+                <div class="phrase-row" data-start="51.25" data-end="53.50">
+                    <span class="eng-text">The sky is blue.</span>
+                    <span class="rus-text">Небо голубое.</span>
+                </div>
+
+                <div class="phrase-row" data-start="53.50" data-end="55.73">
+                    <span class="eng-text">The clouds are white.</span>
+                    <span class="rus-text">Облака белые.</span>
+                </div>
+
+                <div class="phrase-row" data-start="55.73" data-end="58.15">
+                    <span class="eng-text">I feel the cool wind.</span>
+                    <span class="rus-text">Я чувствую прохладный ветер.</span>
+                </div>
+
+                <div class="phrase-row" data-start="58.15" data-end="60.20">
+                    <span class="eng-text">It is so good!</span>
+                    <span class="rus-text">Это так здорово!</span>
+                </div>
+
+                <div class="phrase-row" data-start="60.20" data-end="63.42">
+                    <span class="eng-text">My English is like my bicycle.</span>
+                    <span class="rus-text">Мой английский — как мой велосипед.</span>
+                </div>
+
+                <div class="phrase-row" data-start="63.42" data-end="66.58">
+                    <span class="eng-text">At first, it is very difficult.</span>
+                    <span class="rus-text">Сначала он очень трудный.</span>
+                </div>
+
+                <div class="phrase-row" data-start="66.58" data-end="68.67">
+                    <span class="eng-text">I am a beginner.</span>
+                    <span class="rus-text">Я начинающий.</span>
+                </div>
+
+                <div class="phrase-row" data-start="68.67" data-end="71.47">
+                    <span class="eng-text">I do not understand the teacher.</span>
+                    <span class="rus-text">Я не понимаю учителя.</span>
+                </div>
+
+                <div class="phrase-row" data-start="71.47" data-end="73.85">
+                    <span class="eng-text">My mistakes are big.</span>
+                    <span class="rus-text">Мои ошибки большие.</span>
+                </div>
+
+                <div class="phrase-row" data-start="73.85" data-end="76.22">
+                    <span class="eng-text">I am sad and quiet.</span>
+                    <span class="rus-text">Мне грустно и тихо.</span>
+                </div>
+
+                <div class="phrase-row" data-start="76.22" data-end="78.62">
+                    <span class="eng-text">But I try every day.</span>
+                    <span class="rus-text">Но я пробую каждый день.</span>
+                </div>
+
+                <div class="phrase-row" data-start="78.62" data-end="80.90">
+                    <span class="eng-text">I try in the morning.</span>
+                    <span class="rus-text">Я пробую утром.</span>
+                </div>
+
+                <div class="phrase-row" data-start="80.90" data-end="83.18">
+                    <span class="eng-text">I try in the evening.</span>
+                    <span class="rus-text">Я пробую вечером.</span>
+                </div>
+
+                <div class="phrase-row" data-start="83.18" data-end="85.53">
+                    <span class="eng-text">I listen to songs.</span>
+                    <span class="rus-text">Я слушаю песни.</span>
+                </div>
+
+                <div class="phrase-row" data-start="85.53" data-end="87.88">
+                    <span class="eng-text">I read short stories.</span>
+                    <span class="rus-text">Я читаю короткие рассказы.</span>
+                </div>
+
+                <div class="phrase-row" data-start="87.88" data-end="90.08">
+                    <span class="eng-text">My words are small.</span>
+                    <span class="rus-text">Мои слова маленькие.</span>
+                </div>
+
+                <div class="phrase-row" data-start="90.08" data-end="92.08">
+                    <span class="eng-text">But they are good.</span>
+                    <span class="rus-text">Но они хорошие.</span>
+                </div>
+
+                <div class="phrase-row" data-start="92.08" data-end="94.23">
+                    <span class="eng-text">Then, one day...</span>
+                    <span class="rus-text">И вот, однажды...</span>
+                </div>
+
+                <div class="phrase-row" data-start="94.23" data-end="96.25">
+                    <span class="eng-text">I understand!</span>
+                    <span class="rus-text">Я понимаю!</span>
+                </div>
+
+                <div class="phrase-row" data-start="96.25" data-end="98.48">
+                    <span class="eng-text">I speak English!</span>
+                    <span class="rus-text">Я говорю по-английски!</span>
+                </div>
+
+                <div class="phrase-row" data-start="98.48" data-end="100.75">
+                    <span class="eng-text">I am so happy.</span>
+                    <span class="rus-text">Я так счастлив.</span>
+                </div>
+
+                <div class="phrase-row" data-start="100.75" data-end="104.00">
+                    <span class="eng-text">When I am on my bicycle in the park,</span>
+                    <span class="rus-text">Когда я на велосипеде в парке,</span>
+                </div>
+
+                <div class="phrase-row" data-start="104.00" data-end="106.03">
+                    <span class="eng-text">I am happy.</span>
+                    <span class="rus-text">Я счастлив.</span>
+                </div>
+
+                <div class="phrase-row" data-start="106.03" data-end="109.05">
+                    <span class="eng-text">When I speak English with my friends,</span>
+                    <span class="rus-text">Когда я говорю по-английски с друзьями,</span>
+                </div>
+
+                <div class="phrase-row" data-start="109.05" data-end="111.33">
+                    <span class="eng-text">they are happy too.</span>
+                    <span class="rus-text">они тоже счастливы.</span>
+                </div>
+
+                <div class="phrase-row" data-start="111.33" data-end="114.05">
+                    <span class="eng-text">English is my bicycle.</span>
+                    <span class="rus-text">Английский — мой велосипед.</span>
+                </div>
+
+                <div class="phrase-row" data-start="114.05" data-end="116.50">
+                    <span class="eng-text">I ride it every day.</span>
+                    <span class="rus-text">Я катаюсь на нём каждый день.</span>
+                </div>
+
+                <div class="phrase-row" data-start="116.50" data-end="118.63">
+                    <span class="eng-text">It is my joy.</span>
+                    <span class="rus-text">Это моя радость.</span>
+                </div>
+
+                <div class="phrase-row" data-start="118.63" data-end="121.15">
+                    <span class="eng-text">I love my bicycle,</span>
+                    <span class="rus-text">Я люблю свой велосипед,</span>
+                </div>
+
+                <div class="phrase-row" data-start="121.15" data-end="123.43">
+                    <span class="eng-text">and I love English!</span>
+                    <span class="rus-text">и я люблю английский!</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const audio = document.getElementById('player');
+        const playBtn = document.getElementById('playBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const translateBtn = document.getElementById('translateBtn');
+        const seekSlider = document.getElementById('seekSlider');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const transcript = document.getElementById('transcript');
+        const rows = document.querySelectorAll('.phrase-row');
+
+        playBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                playBtn.textContent = '❚❚';
+            } else {
+                audio.pause();
+                playBtn.textContent = '▶';
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            audio.currentTime = 0; 
+            if (audio.paused) {
+                audio.play(); 
+                playBtn.textContent = '❚❚';
+            }
+        });
+
+        translateBtn.addEventListener('click', () => {
+            transcript.classList.toggle('show-translation');
+            translateBtn.classList.toggle('active-mode');
+        });
+
+        audio.addEventListener('loadedmetadata', () => {
+            seekSlider.max = audio.duration;
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            const currentTime = audio.currentTime;
+            seekSlider.value = currentTime;
+
+            const minutes = Math.floor(currentTime / 60);
+            const seconds = Math.floor(currentTime % 60);
+            timeDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            rows.forEach(row => {
+                const start = parseFloat(row.getAttribute('data-start'));
+                const end = parseFloat(row.getAttribute('data-end'));
+
+                if (currentTime >= start && currentTime < end) {
+                    row.classList.add('active');
+                } else {
+                    row.classList.remove('active');
+                }
+            });
+        });
+
+        seekSlider.addEventListener('input', () => {
+            audio.currentTime = seekSlider.value;
+        });
+
+        rows.forEach(row => {
+            const engTextButton = row.querySelector('.eng-text');
+            engTextButton.addEventListener('click', () => {
+                const start = parseFloat(row.getAttribute('data-start'));
+                audio.currentTime = start;
+                if (audio.paused) {
+                    audio.play();
+                    playBtn.textContent = '❚❚';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
